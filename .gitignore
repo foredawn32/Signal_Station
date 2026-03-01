@@ -1,0 +1,32 @@
+# --- Keil MDK 编译输出 ---
+Output/
+Listings/
+Objects/
+*.txt
+*.htm
+*.lnp
+*.sct
+*.dep
+*.lst
+*.m51
+*.map
+*.obj
+*.axf
+*.build_log.htm
+*.uvgui.*
+*.uvoptx
+DebugConfig/
+RTE/
+
+# --- SysConfig 生成的文件 (可选) ---
+# 如果你想让别人下载仓库后必须用 SysConfig 重新生成，就取消下面两行的注释
+# ti_msp_dl_config.c
+# ti_msp_dl_config.h
+
+# --- 操作系统临时文件 ---
+.DS_Store
+Thumbs.db
+
+# --- 备份文件 ---
+*.bak
+*.pjt
