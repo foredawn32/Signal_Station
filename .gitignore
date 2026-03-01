@@ -30,3 +30,6 @@ Thumbs.db
 # --- 备份文件 ---
 *.bak
 *.pjt
+
+# --- VS Code 环境配置 ---
+.vscode/
