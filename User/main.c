@@ -21,7 +21,14 @@ typedef enum {
 
 // 全局状态变量
 SystemMode g_currentMode = MODE_MENU;
-uint32_t   g_keyValue    = 0;
+
+static int key_value = 0;
+static bool key_handled = false;		
+const char keyboards[] = {'1', '2', '3', 'A',
+													'4', '5', '6', 'B',
+													'7', '8', '9', 'C',
+													'*', '0', '#', 'D'};
+
 bool       g_needsUpdate = true;
 
 // 业务数据（需在各模式函数中更新）
@@ -82,16 +89,11 @@ int main(void)
 		//LoadData();	
 		
     
-    int key_value,temp = 0;
     while (1) {
 		// --- 1. 输入层 ---
-        g_keyValue = KeySCInput();
 
         // --- 2. 逻辑层 ---
-        if (g_keyValue != 0) {
-            Task_SystemLogic();
-            // TODO: 这里可以加一个小延时防止按键抖动过快
-        }
+
 
         // --- 3. 测量/任务层（后台运行） ---
         Task_Measurement();
@@ -113,6 +115,22 @@ int main(void)
 // ==========================================
 // 4. 逻辑处理实现 (待填写)
 // ==========================================
+
+//10ms定时器（按键输入）
+void TIMER_0_INST_IRQHandler(void){
+		static int last_key = 0;
+		int raw_key = KeySCInput();
+		if(raw_key == last_key && raw_key != 0 && raw_key != key_value){
+				key_value = raw_key;
+				key_handled = true;
+		}	else if(raw_key == 0 && !key_handled){
+				key_value = 0;
+		}
+		last_key = raw_key;
+		
+		if(key_value==0) key_handled = false;
+		
+}
 
 void Task_SystemLogic(void) {
     /* 

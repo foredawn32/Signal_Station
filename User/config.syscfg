@@ -20,6 +20,8 @@ const GPIO7         = GPIO.addInstance();
 const SPI           = scripting.addModule("/ti/driverlib/SPI", {}, false);
 const SPI1          = SPI.addInstance();
 const SYSCTL        = scripting.addModule("/ti/driverlib/SYSCTL");
+const TIMER         = scripting.addModule("/ti/driverlib/TIMER", {}, false);
+const TIMER1        = TIMER.addInstance();
 const TRNG          = scripting.addModule("/ti/driverlib/TRNG");
 const ProjectConfig = scripting.addModule("/ti/project_config/ProjectConfig");
 
@@ -189,6 +191,13 @@ SPI1.peripheral.mosiPin.$assign = "PB2";
 SYSCTL.forceDefaultClkConfig = true;
 SYSCTL.clockTreeEn           = true;
 
+TIMER1.$name            = "TIMER_0";
+TIMER1.timerClkDiv      = 8;
+TIMER1.timerClkPrescale = 100;
+TIMER1.timerPeriod      = "10 ms";
+TIMER1.interrupts       = ["ZERO"];
+TIMER1.timerMode        = "PERIODIC";
+
 TRNG.clockDivider = "DL_TRNG_CLOCK_DIVIDE_8";
 
 ProjectConfig.migrationCondition = true;
@@ -199,4 +208,5 @@ ProjectConfig.genLibCMSIS        = true;
  * version of the tool will not impact the pinmux you originally saw.  These lines can be completely deleted in order to
  * re-solve from scratch.
  */
-SPI1.peripheral.$suggestSolution = "SPI0";
+SPI1.peripheral.$suggestSolution   = "SPI0";
+TIMER1.peripheral.$suggestSolution = "TIMA0";
