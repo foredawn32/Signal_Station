@@ -3,23 +3,23 @@
 
 #include "ti_msp_dl_config.h"
 
-#define OLED_CMD 0  // 鍐欏懡浠?
-#define OLED_DATA 1 // 鍐欐暟鎹?
+#define OLED_CMD 0  // 写命令
+#define OLED_DATA 1 // 写数据
 #define OLED_MODE 0
 
 #define  u8  unsigned char 
 #define  u32 unsigned int 
 
 
-//-----------------OLED绔彛瀹氫箟----------------
-// 瑕佹槸SPI鍚嶅瓧璁剧殑涓嶄竴鏍峰湪杩欐敼涓嬪氨琛?,渚嬪涓嬮潰杩欐牱
+// ----------------- OLED 端口定义 ----------------
+// 如果 SPI 名字设的不一样，在这里改一下就行
 //#define SPI_OLED_INST SPI_1_INST
 
 //// Using external CS(3-Wire Structure);
 //#define OLED_CS_Clr()  DL_GPIO_clearPins(OLED_PORT,OLED_CS_PIN)
 //#define OLED_CS_Set()  DL_GPIO_setPins(OLED_PORT,OLED_CS_PIN)
 
-//纭欢SPI Syscofig 璁剧疆 SPI0
+// 硬件 SPI 在 Sysconfig 中的建议设置： 模块选择 SPI0
 //				PICO only;
 //				CLK; SPI
 //				PICO; SPI

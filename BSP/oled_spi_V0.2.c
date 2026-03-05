@@ -1,9 +1,9 @@
 #include "oled_spi_V0.2.h"
 #include "oledfont.h"
 #include <string.h>
-// 鍚慡SD1306鍐欏叆涓?涓瓧鑺傘??
-// dat:瑕佸啓鍏ョ殑鏁版嵁/鍛戒护
-// cmd:鏁版嵁/鍛戒护鏍囧織 0,琛ㄧず鍛戒护;1,琛ㄧず鏁版嵁;
+// 向 SSD1306 写入一个字节
+// dat: 要写入的数据/命令
+// cmd: 数据/命令标志 0,表示命令; 1,表示数据
 u8 OLED_GRAM[130][8];
 void OLED_WR_Byte(u8 dat, u8 cmd)
 {
@@ -32,42 +32,42 @@ void OLED_Set_Pos(unsigned char x, unsigned char y)
     OLED_WR_Byte(((x & 0xf0) >> 4) | 0x10, OLED_CMD);
     OLED_WR_Byte((x & 0x0f) | 0x01, OLED_CMD);
 }
-// 寮?鍚疧LED鏄剧ず
+// 打开OLED显示
 void OLED_Display_On(void)
 {
-    OLED_WR_Byte(0X8D, OLED_CMD); // SET DCDC鍛戒护
+    OLED_WR_Byte(0X8D, OLED_CMD); // SET DCDC命令
     OLED_WR_Byte(0X14, OLED_CMD); // DCDC ON
     OLED_WR_Byte(0XAF, OLED_CMD); // DISPLAY ON
 }
-// 鍏抽棴OLED鏄剧ず
+// 关闭OLED显示
 void OLED_Display_Off(void)
 {
-    OLED_WR_Byte(0X8D, OLED_CMD); // SET DCDC鍛戒护
+    OLED_WR_Byte(0X8D, OLED_CMD); // SET DCDC命令
     OLED_WR_Byte(0X10, OLED_CMD); // DCDC OFF
     OLED_WR_Byte(0XAE, OLED_CMD); // DISPLAY OFF
 }
-// 娓呭睆鍑芥暟,娓呭畬灞?,鏁翠釜灞忓箷鏄粦鑹茬殑!鍜屾病鐐逛寒涓?鏍?!!!
+// 清屏函数,清完屏后,整个屏幕是黑的!和没点亮一样!
 void OLED_Clear(void)
 {
     u8 i, n;
     for (i = 0; i < 8; i++)
     {
-        OLED_WR_Byte(0xb0 + i, OLED_CMD); // 璁剧疆椤靛湴鍧?锛?0~7锛?
-        OLED_WR_Byte(0x02, OLED_CMD);     // 璁剧疆鏄剧ず浣嶇疆鈥斿垪浣庡湴鍧?
-        OLED_WR_Byte(0x10, OLED_CMD);     // 璁剧疆鏄剧ず浣嶇疆鈥斿垪楂樺湴鍧?
+        OLED_WR_Byte(0xb0 + i, OLED_CMD); // 设置页地址（0~7）
+        OLED_WR_Byte(0x02, OLED_CMD);     // 设置显示位置——列低地址
+        OLED_WR_Byte(0x10, OLED_CMD);     // 设置显示位置——列高地址
         for (n = 0; n < 128; n++)
             OLED_WR_Byte(0, OLED_DATA);
     } // 鏇存柊鏄剧ず
     memset(OLED_GRAM, 0, sizeof(OLED_GRAM));
 }
 
-// 鍦ㄦ寚瀹氫綅缃樉绀轰竴涓瓧绗?,鍖呮嫭閮ㄥ垎瀛楃
+// 在指定位置显示一个字符
 // x:0~127
-// y:0~7 (椤靛湴鍧?)
+// y:0~7 (页地址)
 void OLED_ShowChar(u8 x, u8 y, char chr)
 {
     unsigned char c = 0, i = 0;
-    c = chr - ' '; // 寰楀埌鍋忕Щ鍚庣殑鍊?
+    c = chr - ' '; // 得到偏移后的值
     if (x > Max_Column - 1)
     {
         x = 0;
@@ -89,7 +89,7 @@ void OLED_ShowChar(u8 x, u8 y, char chr)
             OLED_WR_Byte(F6x8[c][i], OLED_DATA);
     }
 }
-// m^n鍑芥暟
+// m^n 函数
 u32 oled_pow(u8 m, u8 n)
 {
     u32 result = 1;
@@ -97,11 +97,11 @@ u32 oled_pow(u8 m, u8 n)
         result *= m;
     return result;
 }
-// 鏄剧ず鏁板瓧
-// x,y :璧风偣鍧愭爣
-// len :鏁板瓧鐨勪綅鏁?
-// size2:瀛椾綋澶у皬
-// num:鏁板??(0~4294967295);
+// 显示数字
+// x,y : 起点坐标
+// len : 数字的位数
+// size2: 字体大小
+// num: 数值(0~4294967295)
 void OLED_ShowNum(u8 x, u8 y, u32 num, u8 len, u8 size2)
 {
     u8 t, temp;
@@ -123,25 +123,25 @@ void OLED_ShowNum(u8 x, u8 y, u32 num, u8 len, u8 size2)
     }
 }
 
-void OLED_ShowSignedNum(u8 x, u8 y, int32_t num, u8 len, u8 size2)//鍙互鏄剧ず璐熸暟
+void OLED_ShowSignedNum(u8 x, u8 y, int32_t num, u8 len, u8 size2)//可以显示负数
 {
     u8 t, temp;
     u8 enshow = 0;
     u8 isNegative = 0;
 
-    // 鍒ゆ柇鏄惁涓鸿礋鏁?
+    // 判断是否为负数
     if (num < 0)
     {
         isNegative = 1;
-        num = -num;  // 杞崲涓烘鏁拌繘琛屽鐞?
+        num = -num;  // 转换为正数进行处理
     }
 
-    // 鏄剧ず璐熷彿
+    // 显示负号
     if (isNegative)
     {
         OLED_ShowChar(x, y, '-');
-        x += size2 / 2;  // 鏇存柊璧风偣鍧愭爣
-        len--;  // 鍑忓皯涓?浣嶉暱搴︾敤浜庢樉绀鸿礋鍙?
+        x += size2 / 2;  // 更新起点坐标
+        len--;  // 减少一位长度用于显示负号
     }
 
     for (t = 0; t < len; t++)
@@ -160,7 +160,7 @@ void OLED_ShowSignedNum(u8 x, u8 y, int32_t num, u8 len, u8 size2)//鍙互鏄
         OLED_ShowChar(x + (size2 / 2) * t, y, temp + '0');
     }
 }
-// 鏄剧ず涓?涓瓧绗﹀彿涓?
+// 显示一个字符串
 void OLED_ShowString(u8 x, u8 y, char *chr)
 {
     unsigned char j = 0;
@@ -176,7 +176,7 @@ void OLED_ShowString(u8 x, u8 y, char *chr)
         j++;
     }
 }
-// 鏄剧ず姹夊瓧
+// 显示汉字
 void OLED_ShowCHinese(u8 x, u8 y, u8 no)
 {
     u8 t, adder = 0;
@@ -193,7 +193,7 @@ void OLED_ShowCHinese(u8 x, u8 y, u8 no)
         adder += 1;
     }
 }
-/***********鍔熻兘鎻忚堪锛氭樉绀烘樉绀築MP鍥剧墖128脳64璧峰鐐瑰潗鏍?(x,y),x鐨勮寖鍥?0锝?127锛寉涓洪渶瑕佷娇鐢ㄧ殑椤电殑鑼冨洿1锝?8*****************/
+/***********功能描述：显示BMP图片128×64起始点坐标(x,y),x的范围0～127，y需要使用到的页的范围1～8*****************/
 void OLED_DrawBMP(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char y1, const unsigned char BMP[])
 {
     unsigned int j = 0;
@@ -212,42 +212,42 @@ void OLED_DrawBMP(unsigned char x0, unsigned char y0, unsigned char x1, unsigned
         }
     }
 }
-//·′??oˉêy
+// 反色函数
 void OLED_ColorTurn(u8 i)
 {
 	if(i==0)
 		{
-			OLED_WR_Byte(0xA6,OLED_CMD);//?y3￡??ê?
+			OLED_WR_Byte(0xA6,OLED_CMD);// 正常显示
 		}
 	if(i==1)
 		{
-			OLED_WR_Byte(0xA7,OLED_CMD);//·′é???ê?
+			OLED_WR_Byte(0xA7,OLED_CMD);// 反色显示
 		}
 }
 
-//?á??Dy×a180?è
+// 屏幕旋转180度
 void OLED_DisplayTurn(u8 i)
 {
 	if(i==0)
 		{
-			OLED_WR_Byte(0xC8,OLED_CMD);//?y3￡??ê?
+			OLED_WR_Byte(0xC8,OLED_CMD);// 正常显示
 			OLED_WR_Byte(0xA1,OLED_CMD);
 		}
 	if(i==1)
 		{
-			OLED_WR_Byte(0xC0,OLED_CMD);//·′×a??ê?
+			OLED_WR_Byte(0xC0,OLED_CMD);// 屏幕旋转180度
 			OLED_WR_Byte(0xA0,OLED_CMD);
 		}
 }
-//?üD???′?μ?OLED	
+// 更新显存到 OLED (用于 GRAM 模式)
 void OLED_Refresh(void)
 {
 	u8 i,n;
 	for(i=0;i<8;i++)
 	{
-		OLED_WR_Byte(0xb0+i,OLED_CMD); //éè??DD?eê?μ??·
-		OLED_WR_Byte(0x00,OLED_CMD);   //éè??μíáD?eê?μ??·
-		OLED_WR_Byte(0x10,OLED_CMD);   //éè????áD?eê?μ??·
+		OLED_WR_Byte(0xb0+i,OLED_CMD); // 设置页起始地址
+		OLED_WR_Byte(0x00,OLED_CMD);   // 设置低列地址
+		OLED_WR_Byte(0x10,OLED_CMD);   // 设置高列地址
 		OLED_CS_Clr();
 		delay_cycles(CPU_Frq * 5);
         while (DL_SPI_isBusy(SPI_OLED_INST)){}
@@ -267,10 +267,10 @@ void OLED_Refresh(void)
 		// I2C_Stop();
   }
 }
-//?-μ? 
-//x:0~127
-//y:0~63
-//t:1 ì?3? 0,????	
+// 画点 
+// x: 0~127
+// y: 0~63
+// t: 1 填充, 0 清空
 void OLED_DrawPoint(u8 x,u8 y,u8 t)
 {
 	u8 i,m,n;
@@ -286,29 +286,29 @@ void OLED_DrawPoint(u8 x,u8 y,u8 t)
 	}
 }
 
-//?-??
-//x1,y1:?eμ?×?±ê
-//x2,y2:?áê?×?±ê
+// 画线
+// x1,y1: 起点坐标
+// x2,y2: 终点坐标
 void OLED_DrawLine(u8 x1,u8 y1,u8 x2,u8 y2,u8 mode)
 {
 	uint16_t t; 
 	int xerr=0,yerr=0,delta_x,delta_y,distance;
 	int incx,incy,uRow,uCol;
-	delta_x=x2-x1; //????×?±ê??á? 
+	delta_x=x2-x1;// 计算坐标增量
 	delta_y=y2-y1;
 	uRow=x1;//?-???eμ?×?±ê
 	uCol=y1;
-	if(delta_x>0)incx=1; //éè??μ￥2?·??ò 
-	else if (delta_x==0)incx=0;//′1?±?? 
+	if(delta_x>0)incx=1; // 设置单步方向
+	else if (delta_x==0)incx=0;// 垂直线
 	else {incx=-1;delta_x=-delta_x;}
 	if(delta_y>0)incy=1;
-	else if (delta_y==0)incy=0;//?????? 
+	else if (delta_y==0)incy=0;// 水平线
 	else {incy=-1;delta_y=-delta_x;}
-	if(delta_x>delta_y)distance=delta_x; //??è??ù±???á?×?±ê?á 
+	if(delta_x>delta_y)distance=delta_x; // 选取基本增量轴
 	else distance=delta_y;
 	for(t=0;t<distance+1;t++)
 	{
-		OLED_DrawPoint(uRow,uCol,mode);//?-μ?
+		OLED_DrawPoint(uRow,uCol,mode);// 画点
 		xerr+=delta_x;
 		yerr+=delta_y;
 		if(xerr>distance)
@@ -323,8 +323,9 @@ void OLED_DrawLine(u8 x1,u8 y1,u8 x2,u8 y2,u8 mode)
 		}
 	}
 }
-//x,y:?2D?×?±ê
-//r:?2μ?°???
+// 画圆
+// x,y: 圆心坐标
+// r: 半径
 void OLED_DrawCircle(u8 x,u8 y,u8 r)
 {
 	int a, b,num;
@@ -343,7 +344,7 @@ void OLED_DrawCircle(u8 x,u8 y,u8 r)
         OLED_DrawPoint(x - b, y + a,1);
         
         a++;
-        num = (a * a + b * b) - r*r;//?????-μ?μ?à??2D?μ??àà?
+        num = (a * a + b * b) - r*r;// 计算当前点到圆心的距离
         if(num > 0)
         {
             b--;
@@ -352,7 +353,7 @@ void OLED_DrawCircle(u8 x,u8 y,u8 r)
     }
 }
 
-// 鍒濆鍖朣SD1306
+// 初始化 SSD1306
 void OLED_Init(void)
 {
 	
