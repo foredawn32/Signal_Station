@@ -44,6 +44,7 @@ void Task_SystemLogic(void);
 void Task_Measurement(void);
 
 // UI 显示函数
+void UI_DrawGreeting(void);
 void UI_DrawMenu(void);
 void UI_DrawVoltmeter(void);
 void UI_DrawGenerator(void);
@@ -132,6 +133,17 @@ void TIMER_0_INST_IRQHandler(void){
 		
 }
 
+/*菜单*/
+//user按键中断打开菜单
+void GROUP1_IRQHandler(void){
+		DL_Timer_startCounter(TIMER_0_INST);
+		switch(DL_Interrupt_getPendingGroup(DL_INTERRUPT_GROUP_1)){
+			case key_INT_IIDX:
+					//oled_update = true; menu_options = 4; break;
+			default: break;
+		}
+}
+
 void Task_SystemLogic(void) {
     /* 
      * TODO: 根据 g_keyValue 实现：
@@ -153,6 +165,11 @@ void Task_Measurement(void) {
 // ==========================================
 // 5. UI 绘制实现 (待填写)
 // ==========================================
+
+void UI_DrawGreeting(void) {
+    // TODO: 使用 OLED_ShowString 绘制欢迎界面，例如 "Welcome to Signal Station!"
+    
+}
 
 void UI_DrawMenu(void) {
     // TODO: 使用 OLED_ShowString 绘制主菜单列表
