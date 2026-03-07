@@ -25,7 +25,7 @@ SystemMode g_currentMode = MODE_GREETING;
 
 static int g_keyvalue = 0;
 static bool g_keyhandled = true;		
-const char keyboards[] = {'1', '2', '3', 'A',
+const char g_keyboards[] = {'1', '2', '3', 'A',
 													'4', '5', '6', 'B',
 													'7', '8', '9', 'C',
 													'*', '0', '#', 'D'};
@@ -82,7 +82,8 @@ int main(void)
 	/* 使能中断 */
 	NVIC_EnableIRQ(key_INT_IRQN);
 	NVIC_EnableIRQ(TIMER_0_INST_INT_IRQN);
-    
+    /*开始计时*/
+	DL_TimerG_startCounter(TIMER_0_INST); 
 	// 初始化 Flash 模拟 EEPROM
 	EEPROMEmulationState = EEPROM_TypeA_init(&EEPROMEmulationBuffer[0]);	//Initialize flash;
 	if (EEPROMEmulationState != EEPROM_EMULATION_INIT_OK) {
@@ -98,7 +99,7 @@ int main(void)
 		// --- 1. 输入层 ---
 
         // --- 2. 逻辑层 ---
-
+		Task_SystemLogic();
 
         // --- 3. 测量/任务层（后台运行） ---
         Task_Measurement();
@@ -152,11 +153,21 @@ void GROUP1_IRQHandler(void){
 void Task_SystemLogic(void) {
     /* 
      * TODO: 根据 g_keyValue 实现：
-     * 1. 模式切换：例如 A 键返回菜单，1, 2, 3 进入不同模式
+     * 1. 模式切换：在菜单界面时，A, B, C 进入不同模式
      * 2. 参数修改：在信号源模式下增加/减少频率
      * 3. 数据保存：在电压表模式下触发存储
      * 4. 记得操作完成后设置 g_needsUpdate = true
      */
+	if(g_currentMode == MODE_MENU && !g_keyhandled){
+		switch(g_keyboards[g_keyvalue - 1]){
+			case 'A': g_currentMode = MODE_VOLTMETER; break;
+			case 'B': g_currentMode = MODE_GENERATOR; break;
+			case 'C': g_currentMode = MODE_HISTORY; break;
+			default: break;
+		}
+		g_keyhandled = true;
+		g_needsUpdate = true;
+	}
 }
 
 void Task_Measurement(void) {
@@ -191,6 +202,10 @@ void UI_DrawVoltmeter(void) {
 
 void UI_DrawGenerator(void) {
     // TODO: 绘制信号源界面，显示当前频率和波形类型
+	OLED_ShowString(0, 0, "Generator");
+    OLED_ShowString(0, 2, "Wave: Sine");
+    OLED_ShowString(0, 4, "Freq: 100 Hz");
+    OLED_ShowString(0, 7, "Press D to Back"); // 提示用户怎么回去
 }
 
 void UI_DrawHistory(void) {
