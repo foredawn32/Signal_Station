@@ -9,6 +9,7 @@
 /**
  * Import the modules used in this configuration.
  */
+const DAC12         = scripting.addModule("/ti/driverlib/DAC12");
 const GPIO          = scripting.addModule("/ti/driverlib/GPIO", {}, false);
 const GPIO1         = GPIO.addInstance();
 const GPIO2         = GPIO.addInstance();
@@ -66,6 +67,16 @@ pinFunction4.peripheral.hfxOutPin.$assign = "PA6";
 const pinFunction6     = system.clockTree["LFXT"];
 pinFunction6.inputFreq = 32.768;
 
+DAC12.dacOutputPinEn            = true;
+DAC12.peripheral.$assign        = "DAC0";
+DAC12.peripheral.OutPin.$assign = "PA15";
+DAC12.OutPinConfig.$name        = "ti_driverlib_gpio_GPIOPinGeneric2";
+
+const Board                       = scripting.addModule("/ti/driverlib/Board", {}, false);
+Board.peripheral.$assign          = "DEBUGSS";
+Board.peripheral.swclkPin.$assign = "PA20";
+Board.peripheral.swdioPin.$assign = "PA19";
+
 GPIO1.$name                              = "LED";
 GPIO1.associatedPins.create(8);
 GPIO1.associatedPins[0].$name            = "L1";
@@ -92,11 +103,6 @@ GPIO1.associatedPins[6].internalResistor = "PULL_UP";
 GPIO1.associatedPins[6].pin.$assign      = "PC6";
 GPIO1.associatedPins[7].$name            = "L8";
 GPIO1.associatedPins[7].pin.$assign      = "PC7";
-
-const Board                       = scripting.addModule("/ti/driverlib/Board", {}, false);
-Board.peripheral.$assign          = "DEBUGSS";
-Board.peripheral.swclkPin.$assign = "PA20";
-Board.peripheral.swdioPin.$assign = "PA19";
 
 GPIO2.$name                              = "key";
 GPIO2.associatedPins[0].$name            = "user";

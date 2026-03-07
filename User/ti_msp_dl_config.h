@@ -243,6 +243,16 @@ extern "C" {
 
 
 
+
+/* Defines for DAC12 */
+#define DAC12_IRQHandler                                         DAC0_IRQHandler
+#define DAC12_INT_IRQN                                           (DAC0_INT_IRQn)
+#define GPIO_DAC12_OUT_PORT                                                GPIOA
+#define GPIO_DAC12_OUT_PIN                                        DL_GPIO_PIN_15
+#define GPIO_DAC12_IOMUX_OUT                                     (IOMUX_PINCM37)
+#define GPIO_DAC12_IOMUX_OUT_FUNC                   IOMUX_PINCM37_PF_UNCONNECTED
+
+
 /* clang-format on */
 
 void SYSCFG_DL_init(void);
@@ -253,6 +263,7 @@ void SYSCFG_DL_TIMER_0_init(void);
 void SYSCFG_DL_SPI_0_init(void);
 
 void SYSCFG_DL_TRNG_init(void);
+void SYSCFG_DL_DAC12_init(void);
 
 bool SYSCFG_DL_saveConfiguration(void);
 bool SYSCFG_DL_restoreConfiguration(void);

@@ -57,6 +57,7 @@ SYSCONFIG_WEAK void SYSCFG_DL_init(void)
     SYSCFG_DL_TIMER_0_init();
     SYSCFG_DL_SPI_0_init();
     SYSCFG_DL_TRNG_init();
+    SYSCFG_DL_DAC12_init();
     /* Ensure backup structures have no valid state */
 	gTIMER_0Backup.backupRdy 	= false;
 	gSPI_0Backup.backupRdy 	= false;
@@ -98,6 +99,7 @@ SYSCONFIG_WEAK void SYSCFG_DL_initPower(void)
     DL_TimerA_reset(TIMER_0_INST);
     DL_SPI_reset(SPI_0_INST);
     DL_TRNG_reset(TRNG);
+    DL_DAC12_reset(DAC0);
 
     DL_GPIO_enablePower(GPIOA);
     DL_GPIO_enablePower(GPIOB);
@@ -105,6 +107,7 @@ SYSCONFIG_WEAK void SYSCFG_DL_initPower(void)
     DL_TimerA_enablePower(TIMER_0_INST);
     DL_SPI_enablePower(SPI_0_INST);
     DL_TRNG_enablePower(TRNG);
+    DL_DAC12_enablePower(DAC0);
     delay_cycles(POWER_STARTUP_DELAY);
 }
 
@@ -392,5 +395,24 @@ SYSCONFIG_WEAK void SYSCFG_DL_TRNG_init(void)
     DL_TRNG_clearInterruptStatus(TRNG, DL_TRNG_INTERRUPT_CMD_DONE_EVENT);
 
     DL_TRNG_setDecimationRate(TRNG, DL_TRNG_DECIMATION_RATE_4);
+}
+
+static const DL_DAC12_Config gDAC12Config = {
+    .outputEnable              = DL_DAC12_OUTPUT_ENABLED,
+    .resolution                = DL_DAC12_RESOLUTION_12BIT,
+    .representation            = DL_DAC12_REPRESENTATION_BINARY,
+    .voltageReferenceSource    = DL_DAC12_VREF_SOURCE_VDDA_VSSA,
+    .amplifierSetting          = DL_DAC12_AMP_OFF_TRISTATE,
+    .fifoEnable                = DL_DAC12_FIFO_DISABLED,
+    .fifoTriggerSource         = DL_DAC12_FIFO_TRIGGER_SAMPLETIMER,
+    .dmaTriggerEnable          = DL_DAC12_DMA_TRIGGER_DISABLED,
+    .dmaTriggerThreshold       = DL_DAC12_FIFO_THRESHOLD_ONE_QTR_EMPTY,
+    .sampleTimeGeneratorEnable = DL_DAC12_SAMPLETIMER_DISABLE,
+    .sampleRate                = DL_DAC12_SAMPLES_PER_SECOND_500,
+};
+SYSCONFIG_WEAK void SYSCFG_DL_DAC12_init(void)
+{
+    DL_DAC12_init(DAC0, (DL_DAC12_Config *) &gDAC12Config);
+    DL_DAC12_enable(DAC0);
 }
 
