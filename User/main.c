@@ -32,6 +32,13 @@ const char g_keyboards[] = {'1', '2', '3', 'A',
 
 bool       g_needsUpdate = true;
 
+/* 信号发生器参数 */
+static int g_sampleRate = 20000; // 信号发生器采样率
+int32_t g_currentPhase; // 相位累加器，对应 [-1, 1) 的 Unit Angle
+int32_t g_phaseStep;  // 每个采样周期的相位增量，计算公式：phaseStep = (frequency / sampleRate) * 2^32
+uint32_t g_targetFreq = 100; // 目标频率，单位 Hz
+bool g_waveEnabled = false; // 波形输出使能
+
 // 业务数据（需在各模式函数中更新）
 float    g_voltValue = 0.0f;
 uint32_t g_frequency = 100;
