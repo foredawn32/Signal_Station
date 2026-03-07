@@ -18,11 +18,13 @@ const GPIO4         = GPIO.addInstance();
 const GPIO5         = GPIO.addInstance();
 const GPIO6         = GPIO.addInstance();
 const GPIO7         = GPIO.addInstance();
+const MATHACL       = scripting.addModule("/ti/driverlib/MATHACL");
 const SPI           = scripting.addModule("/ti/driverlib/SPI", {}, false);
 const SPI1          = SPI.addInstance();
 const SYSCTL        = scripting.addModule("/ti/driverlib/SYSCTL");
 const TIMER         = scripting.addModule("/ti/driverlib/TIMER", {}, false);
 const TIMER1        = TIMER.addInstance();
+const TIMER2        = TIMER.addInstance();
 const TRNG          = scripting.addModule("/ti/driverlib/TRNG");
 const ProjectConfig = scripting.addModule("/ti/project_config/ProjectConfig");
 
@@ -203,6 +205,13 @@ TIMER1.timerClkPrescale = 100;
 TIMER1.timerPeriod      = "10 ms";
 TIMER1.interrupts       = ["ZERO"];
 TIMER1.timerMode        = "PERIODIC";
+
+TIMER2.$name              = "TIMER_1";
+TIMER2.timerClkDiv        = 8;
+TIMER2.timerMode          = "PERIODIC";
+TIMER2.timerPeriod        = "0.05 ms";
+TIMER2.interrupts         = ["ZERO"];
+TIMER2.peripheral.$assign = "TIMG0";
 
 TRNG.clockDivider = "DL_TRNG_CLOCK_DIVIDE_8";
 

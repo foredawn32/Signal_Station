@@ -87,6 +87,11 @@ extern "C" {
 #define TIMER_0_INST_IRQHandler                                 TIMA0_IRQHandler
 #define TIMER_0_INST_INT_IRQN                                   (TIMA0_INT_IRQn)
 #define TIMER_0_INST_LOAD_VALUE                                           (999U)
+/* Defines for TIMER_1 */
+#define TIMER_1_INST                                                     (TIMG0)
+#define TIMER_1_INST_IRQHandler                                 TIMG0_IRQHandler
+#define TIMER_1_INST_INT_IRQN                                   (TIMG0_INT_IRQn)
+#define TIMER_1_INST_LOAD_VALUE                                           (249U)
 
 
 
@@ -253,6 +258,8 @@ extern "C" {
 #define GPIO_DAC12_IOMUX_OUT_FUNC                   IOMUX_PINCM37_PF_UNCONNECTED
 
 
+
+
 /* clang-format on */
 
 void SYSCFG_DL_init(void);
@@ -260,10 +267,12 @@ void SYSCFG_DL_initPower(void);
 void SYSCFG_DL_GPIO_init(void);
 void SYSCFG_DL_SYSCTL_init(void);
 void SYSCFG_DL_TIMER_0_init(void);
+void SYSCFG_DL_TIMER_1_init(void);
 void SYSCFG_DL_SPI_0_init(void);
 
 void SYSCFG_DL_TRNG_init(void);
 void SYSCFG_DL_DAC12_init(void);
+
 
 bool SYSCFG_DL_saveConfiguration(void);
 bool SYSCFG_DL_restoreConfiguration(void);
