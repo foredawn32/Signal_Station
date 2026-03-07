@@ -44,6 +44,9 @@ uint32_t g_frequency = 100;
 void Task_SystemLogic(void);
 void Task_Measurement(void);
 
+void App_Generator_Init(void);
+void Generator_SetFrequency(uint32_t freq);
+
 // UI 显示函数
 void UI_DrawGreeting(void);
 void UI_DrawMenu(void);
@@ -176,6 +179,23 @@ void Task_Measurement(void) {
      * 1. 如果在电压表模式，读取 ADC 数值并转换为电压
      * 2. 如果在信号源模式，根据 g_frequency 更新定时器参数
      */
+	if(g_currentMode == MODE_GENERATOR){
+		// TODO: 更新信号源参数
+
+	}
+}
+
+void App_Generator_Init(void){
+	/*
+	 * TODO: 初始化信号源相关的定时器和 GPIO
+	*/
+
+}
+
+void Generator_SetFrequency(uint32_t freq){
+	/*
+	 * TODO: 设置信号源频率
+	 */
 }
 
 // ==========================================
