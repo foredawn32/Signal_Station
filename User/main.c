@@ -13,17 +13,18 @@
 // 1. 系统模式与全局变量定义
 // ==========================================
 typedef enum {
-    MODE_MENU = 0,
+	MODE_GREETING = 0, // 欢迎界面
+    MODE_MENU,
     MODE_VOLTMETER,
     MODE_GENERATOR,
     MODE_HISTORY
 } SystemMode;
 
 // 全局状态变量
-SystemMode g_currentMode = MODE_MENU;
+SystemMode g_currentMode = MODE_GREETING;
 
-static int key_value = 0;
-static bool key_handled = false;		
+static int g_keyvalue = 0;
+static bool g_keyhandled = true;		
 const char keyboards[] = {'1', '2', '3', 'A',
 													'4', '5', '6', 'B',
 													'7', '8', '9', 'C',
@@ -78,6 +79,9 @@ int main(void)
     SYSCFG_DL_init();
     Keyboard_init();
     OLED_Init();
+	/* 使能中断 */
+	NVIC_EnableIRQ(key_INT_IRQN);
+	NVIC_EnableIRQ(TIMER_0_INST_INT_IRQN);
     
 	// 初始化 Flash 模拟 EEPROM
 	EEPROMEmulationState = EEPROM_TypeA_init(&EEPROMEmulationBuffer[0]);	//Initialize flash;
@@ -102,15 +106,16 @@ int main(void)
         // --- 4. 显示层 ---
         if (g_needsUpdate) {
             OLED_Clear();
-            switch (g_currentMode) {
-                case MODE_MENU:      UI_DrawMenu();      break;
-                case MODE_VOLTMETER: UI_DrawVoltmeter(); break;
-                case MODE_GENERATOR: UI_DrawGenerator(); break;
-                case MODE_HISTORY:   UI_DrawHistory();   break;
-            }
             g_needsUpdate = false;
         }
-    }
+		switch (g_currentMode) {
+            case MODE_GREETING:  UI_DrawGreeting();  break;
+            case MODE_MENU:      UI_DrawMenu();      break;
+            case MODE_VOLTMETER: UI_DrawVoltmeter(); break;
+            case MODE_GENERATOR: UI_DrawGenerator(); break;
+            case MODE_HISTORY:   UI_DrawHistory();   break;
+			default: break;}
+		}
 }
 
 // ==========================================
@@ -121,25 +126,25 @@ int main(void)
 void TIMER_0_INST_IRQHandler(void){
 		static int last_key = 0;
 		int raw_key = KeySCInput();
-		if(raw_key == last_key && raw_key != 0 && raw_key != key_value){
-				key_value = raw_key;
-				key_handled = true;
-		}	else if(raw_key == 0 && !key_handled){
-				key_value = 0;
+		if(raw_key == last_key && raw_key != 0 && raw_key != g_keyvalue){
+				g_keyvalue = raw_key;
+				g_keyhandled = false;
+		}	else if(raw_key == 0 && !g_keyhandled){
+				g_keyvalue = 0;
 		}
 		last_key = raw_key;
 		
-		if(key_value==0) key_handled = false;
+		if(g_keyvalue==0) g_keyhandled = true;
 		
 }
 
 /*菜单*/
 //user按键中断打开菜单
 void GROUP1_IRQHandler(void){
-		DL_Timer_startCounter(TIMER_0_INST);
 		switch(DL_Interrupt_getPendingGroup(DL_INTERRUPT_GROUP_1)){
 			case key_INT_IIDX:
-					//oled_update = true; menu_options = 4; break;
+					g_needsUpdate = true; 
+					g_currentMode = MODE_MENU; break;
 			default: break;
 		}
 }
@@ -167,12 +172,17 @@ void Task_Measurement(void) {
 // ==========================================
 
 void UI_DrawGreeting(void) {
-    // TODO: 使用 OLED_ShowString 绘制欢迎界面，例如 "Welcome to Signal Station!"
-    
+    // TODO: 使用 OLED_ShowString 绘制欢迎界面
+    OLED_ShowString(8, 2, "Signal Station");
+	OLED_ShowString(24, 5, "Press User");
 }
 
 void UI_DrawMenu(void) {
     // TODO: 使用 OLED_ShowString 绘制主菜单列表
+	OLED_ShowString(0, 0, "Main Menu");
+	OLED_ShowString(0, 3, "A. Voltmeter");
+	OLED_ShowString(0, 4, "B. Generator");
+	OLED_ShowString(0, 5, "C. History");
 }
 
 void UI_DrawVoltmeter(void) {
