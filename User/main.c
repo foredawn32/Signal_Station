@@ -293,11 +293,15 @@ void UI_DrawVoltmeter(void) {
     // TODO: 绘制电压表界面，显示 g_voltValue 的实时数值
 }
 
+
 void UI_DrawGenerator(void) {
     // TODO: 绘制信号源界面，显示当前频率和波形类型
+	char buf[16];
 	OLED_ShowString(0, 0, "Generator");
     OLED_ShowString(0, 2, "Wave: Sine");
-    OLED_ShowString(0, 4, "Freq: 100 Hz");
+	sprintf(buf, "Freq: %d Hz", g_targetFreq); // 动态显示当前频率
+	OLED_ShowString(0, 4, (uint8_t *)buf);
+    // OLED_ShowString(0, 4, "Freq: 100 Hz");
     OLED_ShowString(0, 7, "Press D to Back"); // 提示用户怎么回去
 }
 
