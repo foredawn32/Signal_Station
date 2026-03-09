@@ -51,7 +51,9 @@ uint32_t g_frequency = 100;
 void Task_SystemLogic(void);
 void Task_Measurement(void);
 
+// 信号发生器相关
 void App_Generator_Init(void);
+void Generator_UpdateStep(void);
 void Generator_SetFrequency(uint32_t freq);
 
 // UI 显示函数
@@ -149,6 +151,43 @@ void TIMER_0_INST_IRQHandler(void){
 		
 }
 
+//0.05ms定时器（信号发生器更新）
+void TIMER_1_INST_IRQHandler(void){
+	/*
+	 *TODO - 1. 根据 g_waveEnabled 判断是否需要更新输出
+	*/
+		if (g_waveEnabled) {
+            // 2. 相位累加：每次中断增加一个步长
+            // 这里的溢出是“安全的”，例如从 2,147,483,647 加 1 
+            // 会变成 -2,147,483,648，正好对应 MATHACL 中 Unit Angle 的循环
+            g_currentPhase += g_phaseStep;
+
+            // 3. 触发 MATHACL 计算
+            // 直接写入 OP2 寄存器触发计算（假设已经在初始化里配置好了 FUNC 为 SINCOS）
+            MATHACL->OP2 = g_currentPhase;
+
+            // 4. 等待硬件计算完成 (通常仅需几个时钟周期)
+            // 80MHz 主频下，MATHACL 计算 SINCOS 的速度极快
+            while (MATHACL->STATUS & MATHACL_STATUS_BUSY_MASK);
+
+            // 5. 获取正弦结果并映射到 DAC
+            // RES2 返回的是 SQ0.31 格式 (-2^31 到 2^31-1)
+            int32_t rawSine = (int32_t)MATHACL->RES2;
+
+            // 映射逻辑：
+            // rawSine >> 20 : 将 32位数据 缩减到 12位 (-2048 到 2047)
+            // + 2048       : 增加直流偏移，使其变为 (0 到 4095)
+            uint32_t dacValue = (uint32_t)((rawSine >> 20) + 2048);
+
+            // 6. 立即输出到 DAC
+            DL_DAC12_output12(DAC0, dacValue);
+            
+    	} else {
+            // 如果关闭输出，使 DAC 保持在中位（1.65V）
+    	    DL_DAC12_output12(DAC0, 2048);
+    	}
+}
+
 /*菜单*/
 //user按键中断打开菜单
 void GROUP1_IRQHandler(void){
@@ -192,11 +231,32 @@ void Task_Measurement(void) {
 	}
 }
 
+void Generator_UpdateStep(void) {
+	// 计算相位增量，公式：phaseStep = (frequency / sampleRate) * 2^32
+	g_phaseStep = (int32_t)(((double)g_targetFreq / g_sampleRate) * 4294967296.0);
+}
+
 void App_Generator_Init(void){
 	/*
 	 * TODO: 初始化信号源相关的定时器和 GPIO
 	*/
+	// 1. DAC 自校准与使能
+	DL_DAC12_performSelfCalibrationBlocking(DAC0);
+	DL_DAC12_enable(DAC0);
+	DL_DAC12_enableOutputPin(DAC0);
 
+	// 2. MATHACL 配置
+	// 设置功能为 SINCOS (1h)，迭代次数建议 24 次以获得极高精度
+	MATHACL->CTL = (MATHACL_CTL_FUNC_SINCOS << MATHACL_CTL_FUNC_OFS) | 
+               (24 << MATHACL_CTL_NUMITER_OFS);
+
+	// 3. 初始参数计算
+	g_currentPhase = 0;
+	Generator_UpdateStep(); // 根据初始频率计算步长
+
+	// 4. 开启定时器中断
+	NVIC_EnableIRQ(TIMER_1_INST_INT_IRQN);
+	//DL_TimerG_startCounter(TIMER_1_INST);
 }
 
 void Generator_SetFrequency(uint32_t freq){
