@@ -207,7 +207,7 @@ void Task_SystemLogic(void) {
      * 3. 数据保存：在电压表模式下触发存储
      * 4. 记得操作完成后设置 g_needsUpdate = true
      */
-	if(g_currentMode == MODE_MENU && !g_keyhandled){
+	if(g_currentMode == MODE_MENU && !g_keyhandled && g_keyvalue >0){
 		switch(g_keyboards[g_keyvalue - 1]){
 			case 'A': g_currentMode = MODE_VOLTMETER; break;
 			case 'B': g_currentMode = MODE_GENERATOR; break;
