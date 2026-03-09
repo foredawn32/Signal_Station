@@ -72,6 +72,7 @@ const pinFunction6     = system.clockTree["LFXT"];
 pinFunction6.inputFreq = 32.768;
 
 DAC12.dacOutputPinEn            = true;
+DAC12.dacAmplifier              = "ON";
 DAC12.peripheral.$assign        = "DAC0";
 DAC12.peripheral.OutPin.$assign = "PA15";
 DAC12.OutPinConfig.$name        = "ti_driverlib_gpio_GPIOPinGeneric2";

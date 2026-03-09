@@ -91,9 +91,13 @@ int main(void)
     SYSCFG_DL_init();
     Keyboard_init();
     OLED_Init();
+	App_Generator_Init(); // 初始化信号发生器相关设置
 	/* 使能中断 */
 	NVIC_EnableIRQ(key_INT_IRQN);
 	NVIC_EnableIRQ(TIMER_0_INST_INT_IRQN);
+	NVIC_ClearPendingIRQ(UART_0_INST_INT_IRQN);
+	NVIC_EnableIRQ(UART_0_INST_INT_IRQN);
+
     /*开始计时*/
 	DL_TimerG_startCounter(TIMER_0_INST); 
 	// 初始化 Flash 模拟 EEPROM
@@ -270,6 +274,8 @@ void Generator_SetFrequency(uint32_t freq){
 	 * TODO: 设置信号源频率
 	 */
 }
+
+
 
 // ==========================================
 // 5. UI 绘制实现 (待填写)
