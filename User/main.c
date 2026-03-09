@@ -193,6 +193,8 @@ void TIMER_1_INST_IRQHandler(void){
 void GROUP1_IRQHandler(void){
 		switch(DL_Interrupt_getPendingGroup(DL_INTERRUPT_GROUP_1)){
 			case key_INT_IIDX:
+					DL_TimerG_stopCounter(TIMER_1_INST); // 进入菜单时停止信号发生器
+					g_waveEnabled = false; // 禁止波形输出
 					g_needsUpdate = true; 
 					g_currentMode = MODE_MENU; break;
 			default: break;
@@ -210,7 +212,11 @@ void Task_SystemLogic(void) {
 	if(g_currentMode == MODE_MENU && !g_keyhandled && g_keyvalue >0){
 		switch(g_keyboards[g_keyvalue - 1]){
 			case 'A': g_currentMode = MODE_VOLTMETER; break;
-			case 'B': g_currentMode = MODE_GENERATOR; break;
+			case 'B': 
+				g_currentMode = MODE_GENERATOR;
+				g_waveEnabled = true; // 进入信号源模式时启用输出
+				DL_TimerG_startCounter(TIMER_1_INST); // 启动信号发生器定时器
+				break;
 			case 'C': g_currentMode = MODE_HISTORY; break;
 			default: break;
 		}
