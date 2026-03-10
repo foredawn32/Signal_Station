@@ -63,6 +63,10 @@ void UI_DrawVoltmeter(void);
 void UI_DrawGenerator(void);
 void UI_DrawHistory(void);
 
+// UART 输出函数（调试用）
+void UART_WriteChar(char);
+void VOFA_JustFloat(float);
+
 // --- Flash 存储相关 ---
 uint32_t EEPROMEmulationState;
 uint32_t EEPROMEmulationBuffer[EEPROM_EMULATION_DATA_SIZE / sizeof(uint32_t)];
@@ -275,7 +279,31 @@ void Generator_SetFrequency(uint32_t freq){
 	 */
 }
 
+// 串口发送单个字符
+void UART_WriteChar(char c) {
+    // 检查库文件中的 STAT 寄存器 BUSY 位
+    while (DL_UART_isBusy(UART_0_INST)); 
+    // 调用库中的发送函数
+    DL_UART_transmitData(UART_0_INST, (uint8_t)c);
+}
 
+// 串口发送 JustFloat 数据帧 (VOFA+ 专用)
+void VOFA_JustFloat(float data) {
+    // JustFloat 协议：数据(4字节浮点数) + 帧尾(0x00 0x00 0x80 0x7F)
+    unsigned char *p = (unsigned char *)&data;
+    
+    // 发送 4 字节浮点数（小端模式）
+    UART_WriteChar(p[0]);
+    UART_WriteChar(p[1]);
+    UART_WriteChar(p[2]);
+    UART_WriteChar(p[3]);
+    
+    // 发送帧尾
+    UART_WriteChar(0x00);
+    UART_WriteChar(0x00);
+    UART_WriteChar(0x80);
+    UART_WriteChar(0x7F);
+}
 
 // ==========================================
 // 5. UI 绘制实现 (待填写)
