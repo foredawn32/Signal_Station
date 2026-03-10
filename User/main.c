@@ -65,7 +65,7 @@ void UI_DrawHistory(void);
 
 // UART 输出函数（调试用）
 void UART_WriteChar(char);
-void VOFA_JustFloat(float);
+void VOFA_JustFloat(UART_Regs*, float);
 
 // --- Flash 存储相关 ---
 uint32_t EEPROMEmulationState;
@@ -161,35 +161,23 @@ void TIMER_0_INST_IRQHandler(void){
 
 //0.05ms定时器（信号发生器更新）
 void TIMER_1_INST_IRQHandler(void){
-	/*
-	 *TODO - 1. 根据 g_waveEnabled 判断是否需要更新输出
-	*/
 		if (g_waveEnabled) {
-            // 2. 相位累加：每次中断增加一个步长
-            // 这里的溢出是“安全的”，例如从 2,147,483,647 加 1 
-            // 会变成 -2,147,483,648，正好对应 MATHACL 中 Unit Angle 的循环
+			// 1. 信号生成逻辑
             g_currentPhase += g_phaseStep;
-
-            // 3. 触发 MATHACL 计算
-            // 直接写入 OP2 寄存器触发计算（假设已经在初始化里配置好了 FUNC 为 SINCOS）
             MATHACL->OP2 = g_currentPhase;
-
-            // 4. 等待硬件计算完成 (通常仅需几个时钟周期)
-            // 80MHz 主频下，MATHACL 计算 SINCOS 的速度极快
             while (MATHACL->STATUS & MATHACL_STATUS_BUSY_MASK);
 
-            // 5. 获取正弦结果并映射到 DAC
-            // RES2 返回的是 SQ0.31 格式 (-2^31 到 2^31-1)
             int32_t rawSine = (int32_t)MATHACL->RES2;
-
-            // 映射逻辑：
-            // rawSine >> 20 : 将 32位数据 缩减到 12位 (-2048 到 2047)
-            // + 2048       : 增加直流偏移，使其变为 (0 到 4095)
             uint32_t dacValue = (uint32_t)((rawSine >> 20) + 2048);
-
-            // 6. 立即输出到 DAC
             DL_DAC12_output12(DAC0, dacValue);
-            
+
+			// 2. 串口上传逻辑（加入分频计数器）
+        	static uint16_t uart_div_cnt = 0;
+        	if (++uart_div_cnt >= 20) { // 每 20 次采样上传一次数据（约 1kHz 刷新率）
+            	float debugVolt = (float)dacValue * (3.3f / 4095.0f);
+            	VOFA_JustFloat(UART_0_INST, debugVolt); 
+            	uart_div_cnt = 0;
+        }
     	} else {
             // 如果关闭输出，使 DAC 保持在中位（1.65V）
     	    DL_DAC12_output12(DAC0, 2048);
@@ -288,7 +276,7 @@ void UART_WriteChar(char c) {
 }
 
 // 串口发送 JustFloat 数据帧 (VOFA+ 专用)
-void VOFA_JustFloat(float data) {
+void VOFA_JustFloat(UART_Regs *uart, float data) {
     // JustFloat 协议：数据(4字节浮点数) + 帧尾(0x00 0x00 0x80 0x7F)
     unsigned char *p = (unsigned char *)&data;
     
